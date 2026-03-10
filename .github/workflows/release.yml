@@ -113,6 +113,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: dist
+          pattern: naladb-*
           merge-multiple: true
 
       - name: Create GitHub Release
