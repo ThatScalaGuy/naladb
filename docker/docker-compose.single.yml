@@ -3,6 +3,11 @@
 # Usage:
 #   docker compose -f docker-compose.single.yml up -d
 #
+# With a config file (instead of CLI flags):
+#   1. Copy naladb.example.yml to naladb.yml and edit it.
+#   2. Uncomment the config volume mount below and replace the command
+#      with: command: ["--config", "/etc/naladb/naladb.yml"]
+#
 # Endpoints:
 #   gRPC API:    localhost:7301
 #   Metrics:     localhost:9090/metrics
@@ -24,6 +29,8 @@ services:
       - "9090:9090"
     volumes:
       - naladb-data:/data
+      # Uncomment to use a config file instead of CLI flags:
+      # - ./naladb.yml:/etc/naladb/naladb.yml:ro
     networks:
       - naladb-net
     restart: unless-stopped

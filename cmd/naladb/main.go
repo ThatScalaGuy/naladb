@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/thatscalaguy/naladb/internal/config"
 	"github.com/thatscalaguy/naladb/internal/graph"
 	ngrpc "github.com/thatscalaguy/naladb/internal/grpc"
 	"github.com/thatscalaguy/naladb/internal/hlc"
@@ -36,6 +37,9 @@ const (
 )
 
 func main() {
+	// Config file flag.
+	configPath := flag.String("config", "", "path to YAML config file")
+
 	// Common flags.
 	showVersion := flag.Bool("v", false, "print version and exit")
 	addr := flag.String("addr", ":7301", "gRPC listen address")
@@ -62,6 +66,67 @@ func main() {
 	if *showVersion {
 		fmt.Println("naladb " + version)
 		return
+	}
+
+	// Load config file (if provided) and apply values for flags not
+	// explicitly set on the command line.
+	if *configPath != "" {
+		cfg, err := config.Load(*configPath)
+		if err != nil {
+			log.Fatalf("Failed to load config %q: %v", *configPath, err)
+		}
+
+		explicitly := make(map[string]bool)
+		flag.Visit(func(f *flag.Flag) { explicitly[f.Name] = true })
+
+		if !explicitly["addr"] {
+			*addr = cfg.Cluster.ListenAddr
+		}
+		if !explicitly["metrics-addr"] {
+			*metricsAddr = cfg.Metrics.Addr
+		}
+		if !explicitly["node-id"] {
+			*nodeID = cfg.HLC.NodeID
+		}
+		if !explicitly["max-clock-skew"] {
+			d, err := cfg.HLC.ParseMaxClockSkew()
+			if err != nil {
+				log.Fatalf("Invalid max_clock_skew in config: %v", err)
+			}
+			*maxClockSkew = d
+		}
+		if !explicitly["wal-dir"] {
+			*walDir = cfg.Storage.WALDir
+		}
+		if !explicitly["segment-dir"] {
+			*segDir = cfg.Storage.SegmentDir
+		}
+		if !explicitly["raft"] {
+			*raftEnabled = cfg.Raft.Enabled
+		}
+		if !explicitly["raft-node-id"] {
+			*raftNodeID = cfg.Raft.NodeID
+		}
+		if !explicitly["raft-addr"] {
+			*raftAddr = cfg.Raft.BindAddr
+		}
+		if !explicitly["raft-advertise"] {
+			*raftAdvertise = cfg.Raft.AdvertiseAddr
+		}
+		if !explicitly["raft-dir"] {
+			*raftDir = cfg.Raft.DataDir
+		}
+		if !explicitly["raft-bootstrap"] {
+			*raftBootstrap = cfg.Raft.Bootstrap
+		}
+		if !explicitly["raft-peers"] {
+			*raftPeers = cfg.Raft.PeersFlag()
+		}
+		if !explicitly["grpc-peers"] {
+			*grpcPeers = cfg.Raft.GRPCPeersFlag()
+		}
+
+		log.Printf("Loaded config from %s", *configPath)
 	}
 
 	// Initialize Prometheus metrics.

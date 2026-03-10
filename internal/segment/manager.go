@@ -2,6 +2,7 @@ package segment
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -118,14 +119,30 @@ func (m *Manager) Rotate() error {
 // GetAt queries all finalized segments for the latest value of key with HLC <= ts.
 // Segments are filtered by time range (min_ts) and bloom filter before scanning.
 // Searches from newest to oldest and returns on first match.
+//
+// If a segment file was deleted by concurrent compaction, the search retries
+// with a fresh segment list.
 func (m *Manager) GetAt(key string, ts hlc.HLC) (*wal.Record, error) {
-	m.mu.Lock()
-	segments := make([]*Segment, len(m.segments))
-	copy(segments, m.segments)
-	m.mu.Unlock()
+	const maxRetries = 3
+	for attempt := range maxRetries {
+		m.mu.Lock()
+		segments := make([]*Segment, len(m.segments))
+		copy(segments, m.segments)
+		m.mu.Unlock()
 
-	// Search newest to oldest. Since segments have non-overlapping, ordered
-	// time ranges, the first match from a newer segment is always the best.
+		rec, err := m.searchSegments(segments, key, ts)
+		if err != nil && errors.Is(err, os.ErrNotExist) && attempt < maxRetries-1 {
+			// A segment was deleted by concurrent compaction; retry
+			// with a fresh snapshot that includes the compacted segment.
+			continue
+		}
+		return rec, err
+	}
+	return nil, nil // unreachable
+}
+
+// searchSegments scans the given segment snapshot newest-to-oldest.
+func (m *Manager) searchSegments(segments []*Segment, key string, ts hlc.HLC) (*wal.Record, error) {
 	for i := len(segments) - 1; i >= 0; i-- {
 		seg := segments[i]
 

@@ -1,0 +1,50 @@
+# NalaDB configuration file.
+#
+# Mount this file into the container at /etc/naladb/naladb.yml and start
+# NalaDB with:
+#
+#   naladb --config /etc/naladb/naladb.yml
+#
+# CLI flags take precedence over values in this file.
+# See docs/configuration.md for a full reference of all available options.
+
+# ─── Network ───────────────────────────────────────────────────────────────────
+cluster:
+  listen_addr: ":7301"          # gRPC listen address
+
+# ─── HLC ───────────────────────────────────────────────────────────────────────
+hlc:
+  node_id: 0                    # HLC node ID (0-15), must be unique per node
+  max_clock_skew: "1s"          # Max tolerated clock skew (0 = disabled)
+
+# ─── Storage ───────────────────────────────────────────────────────────────────
+storage:
+  wal_dir: "/data/wal"          # WAL file directory
+  segment_dir: "/data/segments" # Segment storage directory
+
+# ─── Metrics ───────────────────────────────────────────────────────────────────
+metrics:
+  addr: ":9090"                 # Prometheus metrics HTTP address
+
+# ─── RAFT (uncomment for cluster mode) ─────────────────────────────────────────
+# raft:
+#   enabled: true
+#   node_id: "node-0"
+#   data_dir: "/data/raft"
+#   bind_addr: "0.0.0.0:7400"
+#   advertise_addr: "naladb-0:7400"
+#   bootstrap: true
+#   peers:
+#     - id: "node-0"
+#       address: "naladb-0:7400"
+#     - id: "node-1"
+#       address: "naladb-1:7400"
+#     - id: "node-2"
+#       address: "naladb-2:7400"
+#   grpc_peers:
+#     - id: "node-0"
+#       address: "naladb-0:7301"
+#     - id: "node-1"
+#       address: "naladb-1:7301"
+#     - id: "node-2"
+#       address: "naladb-2:7301"

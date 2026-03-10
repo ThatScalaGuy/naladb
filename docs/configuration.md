@@ -4,7 +4,13 @@
 
 ## Configuration File
 
-NalaDB uses a YAML configuration file. By default, it looks for `naladb.yml` in the current directory. All settings can also be set via command-line flags (flags take precedence over the config file).
+NalaDB supports an optional YAML configuration file. Pass it via the `--config` flag:
+
+```bash
+naladb --config /etc/naladb/naladb.yml
+```
+
+All settings can also be set via command-line flags. When both are used, **CLI flags take precedence** over config file values. See [docs/docker.md](docker.md) for Docker-specific guidance.
 
 ## Full YAML Reference
 
