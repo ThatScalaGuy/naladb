@@ -1,0 +1,336 @@
+syntax = "proto3";
+
+package naladb.v1;
+
+option go_package = "github.com/thatscalaguy/naladb/api/gen/naladb/v1;naladbv1";
+
+import "naladb/v1/types.proto";
+
+// ---------------------------------------------------------------------------
+// KVService -- Temporal Key-Value operations
+// ---------------------------------------------------------------------------
+
+service KVService {
+  // Set writes a key-value pair and returns the assigned HLC timestamp.
+  rpc Set(SetRequest) returns (SetResponse);
+  // Get reads the current value of a key.
+  rpc Get(GetRequest) returns (GetResponse);
+  // GetAt reads the value of a key at a specific point in time.
+  rpc GetAt(GetAtRequest) returns (GetAtResponse);
+  // Delete marks a key as deleted (tombstone).
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  // History streams the version history of a key (server-side streaming).
+  rpc History(HistoryRequest) returns (stream HistoryEntry);
+}
+
+// ---------------------------------------------------------------------------
+// GraphService -- Graph Node/Edge CRUD and Traversal
+// ---------------------------------------------------------------------------
+
+service GraphService {
+  // CreateNode creates a new graph node.
+  rpc CreateNode(CreateNodeRequest) returns (CreateNodeResponse);
+  // GetNode retrieves the current metadata for a node.
+  rpc GetNode(GetNodeRequest) returns (GetNodeResponse);
+  // UpdateNode updates properties of a node.
+  rpc UpdateNode(UpdateNodeRequest) returns (UpdateNodeResponse);
+  // DeleteNode soft-deletes a node and its connected edges.
+  rpc DeleteNode(DeleteNodeRequest) returns (DeleteNodeResponse);
+  // CreateEdge creates an edge between two nodes.
+  rpc CreateEdge(CreateEdgeRequest) returns (CreateEdgeResponse);
+  // GetEdge retrieves the current metadata for an edge.
+  rpc GetEdge(GetEdgeRequest) returns (GetEdgeResponse);
+  // UpdateEdge updates properties of an edge.
+  rpc UpdateEdge(UpdateEdgeRequest) returns (UpdateEdgeResponse);
+  // DeleteEdge soft-deletes an edge.
+  rpc DeleteEdge(DeleteEdgeRequest) returns (DeleteEdgeResponse);
+  // Traverse performs a BFS traversal with temporal filtering (server-side streaming).
+  rpc Traverse(TraverseRequest) returns (stream TraverseResult);
+  // Causal performs a causal dependency traversal (server-side streaming).
+  rpc Causal(CausalRequest) returns (stream CausalResult);
+}
+
+// ---------------------------------------------------------------------------
+// WatchService -- Live subscription on key changes
+// ---------------------------------------------------------------------------
+
+service WatchService {
+  // Watch subscribes to live updates on specified keys (server-side streaming).
+  rpc Watch(WatchRequest) returns (stream WatchEvent);
+}
+
+// ---------------------------------------------------------------------------
+// QueryService -- NalaQL query execution
+// ---------------------------------------------------------------------------
+
+service QueryService {
+  // Query executes a NalaQL query and streams back result rows.
+  rpc Query(QueryRequest) returns (stream QueryRow);
+}
+
+// ---------------------------------------------------------------------------
+// KV Messages
+// ---------------------------------------------------------------------------
+
+message SetRequest {
+  string key = 1;
+  bytes value = 2;
+}
+
+message SetResponse {
+  uint64 timestamp = 1;
+}
+
+message GetRequest {
+  string key = 1;
+  ConsistencyLevel consistency = 2;
+  // For BOUNDED_STALE: maximum allowable staleness in milliseconds. Default: 5000.
+  int64 max_stale_ms = 3;
+}
+
+message GetResponse {
+  string key = 1;
+  bytes value = 2;
+  uint64 timestamp = 3;
+  bool found = 4;
+}
+
+message GetAtRequest {
+  string key = 1;
+  uint64 at = 2;
+}
+
+message GetAtResponse {
+  string key = 1;
+  bytes value = 2;
+  uint64 timestamp = 3;
+  bool found = 4;
+}
+
+message DeleteRequest {
+  string key = 1;
+}
+
+message DeleteResponse {
+  uint64 timestamp = 1;
+}
+
+message HistoryRequest {
+  string key = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+  int32 limit = 4;
+  bool reverse = 5;
+}
+
+message HistoryEntry {
+  uint64 timestamp = 1;
+  bytes value = 2;
+  bool tombstone = 3;
+}
+
+// ---------------------------------------------------------------------------
+// Graph Messages
+// ---------------------------------------------------------------------------
+
+message CreateNodeRequest {
+  string type = 1;
+  map<string, bytes> properties = 2;
+}
+
+message CreateNodeResponse {
+  string id = 1;
+  uint64 valid_from = 2;
+  uint64 valid_to = 3;
+}
+
+message GetNodeRequest {
+  string id = 1;
+}
+
+message GetNodeResponse {
+  string id = 1;
+  string type = 2;
+  uint64 valid_from = 3;
+  uint64 valid_to = 4;
+  bool deleted = 5;
+}
+
+message UpdateNodeRequest {
+  string id = 1;
+  map<string, bytes> properties = 2;
+}
+
+message UpdateNodeResponse {}
+
+message DeleteNodeRequest {
+  string id = 1;
+}
+
+message DeleteNodeResponse {}
+
+message CreateEdgeRequest {
+  string from = 1;
+  string to = 2;
+  string relation = 3;
+  uint64 valid_from = 4;
+  uint64 valid_to = 5;
+  map<string, bytes> properties = 6;
+}
+
+message CreateEdgeResponse {
+  string id = 1;
+  uint64 valid_from = 2;
+  uint64 valid_to = 3;
+}
+
+message GetEdgeRequest {
+  string id = 1;
+}
+
+message GetEdgeResponse {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  string relation = 4;
+  uint64 valid_from = 5;
+  uint64 valid_to = 6;
+  bool deleted = 7;
+}
+
+message UpdateEdgeRequest {
+  string id = 1;
+  map<string, bytes> properties = 2;
+}
+
+message UpdateEdgeResponse {}
+
+message DeleteEdgeRequest {
+  string id = 1;
+}
+
+message DeleteEdgeResponse {}
+
+message TraverseRequest {
+  string start = 1;
+  uint64 at = 2;
+  int32 max_depth = 3;
+  Direction direction = 4;
+  repeated string relation_filter = 5;
+  bool include_properties = 6;
+}
+
+message TraverseResult {
+  string node_id = 1;
+  int32 depth = 2;
+  string via_edge = 3;
+  string via_relation = 4;
+  map<string, bytes> properties = 5;
+}
+
+message CausalRequest {
+  string trigger = 1;
+  uint64 at = 2;
+  int32 max_depth = 3;
+  int64 window_micros = 4;
+  CausalDirection direction = 5;
+  double min_confidence = 6;
+  repeated string relation_filter = 7;
+}
+
+message CausalResult {
+  string node_id = 1;
+  int32 depth = 2;
+  int64 delta_micros = 3;
+  double confidence = 4;
+  repeated string causal_path = 5;
+  string via_edge = 6;
+  string via_relation = 7;
+  uint64 change_time = 8;
+}
+
+// ---------------------------------------------------------------------------
+// Watch Messages
+// ---------------------------------------------------------------------------
+
+message WatchRequest {
+  repeated string keys = 1;
+}
+
+message WatchEvent {
+  string key = 1;
+  bytes value = 2;
+  uint64 timestamp = 3;
+  bool deleted = 4;
+}
+
+// ---------------------------------------------------------------------------
+// StatsService -- Database statistics and health
+// ---------------------------------------------------------------------------
+
+service StatsService {
+  // GetStats returns an overview of database statistics.
+  rpc GetStats(GetStatsRequest) returns (GetStatsResponse);
+  // GetKeyStats returns per-key inline statistics from the KeyMeta registry.
+  rpc GetKeyStats(GetKeyStatsRequest) returns (GetKeyStatsResponse);
+}
+
+// ---------------------------------------------------------------------------
+// Query Messages
+// ---------------------------------------------------------------------------
+
+message QueryRequest {
+  // The NalaQL query string to execute.
+  string query = 1;
+}
+
+// QueryRow is a single result row with named columns.
+message QueryRow {
+  // Column values keyed by column name, serialized as strings.
+  map<string, string> columns = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Stats Messages
+// ---------------------------------------------------------------------------
+
+message GetStatsRequest {}
+
+message GetStatsResponse {
+  // Store-level statistics.
+  int64 total_keys = 1;
+  int64 total_versions = 2;
+  int64 tombstones = 3;
+  int64 segments = 4;
+  int64 segment_bytes = 5;
+
+  // Graph-level statistics.
+  int64 nodes_total = 10;
+  int64 nodes_active = 11;
+  int64 nodes_deleted = 12;
+  int64 edges_total = 13;
+  int64 edges_active = 14;
+  int64 edges_deleted = 15;
+  map<string, int64> nodes_by_type = 16;
+  map<string, int64> edges_by_relation = 17;
+}
+
+message GetKeyStatsRequest {
+  // The exact key to retrieve statistics for.
+  string key = 1;
+}
+
+message GetKeyStatsResponse {
+  string key = 1;
+  bool found = 2;
+  uint64 total_writes = 3;
+  int64 first_seen_us = 4;
+  int64 last_seen_us = 5;
+  double write_rate_hz = 6;
+  double min_value = 7;
+  double max_value = 8;
+  double avg_value = 9;
+  double stddev_value = 10;
+  uint32 cardinality = 11;
+  uint64 size_bytes = 12;
+}

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package naladb.v1;
+
+option go_package = "github.com/thatscalaguy/naladb/api/gen/naladb/v1;naladbv1";
+
+// ConsistencyLevel controls the consistency guarantees for read operations.
+enum ConsistencyLevel {
+  // EVENTUAL allows reads from any node (default).
+  CONSISTENCY_LEVEL_EVENTUAL = 0;
+  // LINEARIZABLE ensures reads go through the RAFT leader.
+  CONSISTENCY_LEVEL_LINEARIZABLE = 1;
+  // BOUNDED_STALE allows reads from followers if within max_stale_ms of the leader.
+  CONSISTENCY_LEVEL_BOUNDED_STALE = 2;
+}
+
+// Direction specifies the traversal direction for graph queries.
+enum Direction {
+  // OUTGOING follows edges from source to target (default).
+  DIRECTION_OUTGOING = 0;
+  // INCOMING follows edges from target to source.
+  DIRECTION_INCOMING = 1;
+  // BOTH follows edges in both directions.
+  DIRECTION_BOTH = 2;
+}
+
+// CausalDirection specifies the direction of causal traversal.
+enum CausalDirection {
+  // CAUSAL_FORWARD traces the impact of a trigger event (forward in time).
+  CAUSAL_DIRECTION_FORWARD = 0;
+  // CAUSAL_BACKWARD traces the root cause of a trigger event (backward in time).
+  CAUSAL_DIRECTION_BACKWARD = 1;
+}

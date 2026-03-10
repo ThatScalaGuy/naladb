@@ -1,0 +1,389 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Write Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(naladb_writes_total[1m])",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Read Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(naladb_reads_total[1m])",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Write Latency (p99)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, rate(naladb_write_duration_seconds_bucket[5m]))",
+          "legendFormat": "p99 {{instance}}"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(naladb_write_duration_seconds_bucket[5m]))",
+          "legendFormat": "p50 {{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Read Latency (p99)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, rate(naladb_read_duration_seconds_bucket[5m]))",
+          "legendFormat": "p99 {{instance}}"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(naladb_read_duration_seconds_bucket[5m]))",
+          "legendFormat": "p50 {{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Total Keys",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "naladb_keys_total",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "title": "Segments",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+      "targets": [
+        {
+          "expr": "naladb_segments_total",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "title": "Segment Size",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "naladb_segment_bytes",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Blob Store Size",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 16 },
+      "targets": [
+        {
+          "expr": "naladb_blob_store_bytes",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "RAFT Leader",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "expr": "naladb_raft_is_leader",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "Follower" }, "1": { "text": "Leader" } } }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "RAFT Term",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 20 },
+      "targets": [
+        {
+          "expr": "naladb_raft_term",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "title": "RAFT Commit Index",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 20 },
+      "targets": [
+        {
+          "expr": "naladb_raft_commit_index",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "title": "gRPC Request Rate by Method",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "rate(naladb_grpc_requests_total[1m])",
+          "legendFormat": "{{method}} ({{instance}})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "TTL Expired Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "expr": "rate(naladb_ttl_expired_total[1m])",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Graph & Store Stats",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "title": "Active Nodes",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 33 },
+      "targets": [
+        {
+          "expr": "naladb_nodes_active",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "value": null, "color": "green" }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Total Nodes",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 33 },
+      "targets": [
+        {
+          "expr": "naladb_nodes_total",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "title": "Active Edges",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 33 },
+      "targets": [
+        {
+          "expr": "naladb_edges_active",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "value": null, "color": "green" }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Total Edges",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 33 },
+      "targets": [
+        {
+          "expr": "naladb_edges_total",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "title": "Versions",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 33 },
+      "targets": [
+        {
+          "expr": "naladb_versions_total",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "title": "Tombstones",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 33 },
+      "targets": [
+        {
+          "expr": "naladb_tombstones_total",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 100, "color": "yellow" },
+              { "value": 1000, "color": "red" }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "title": "Nodes Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 37 },
+      "targets": [
+        {
+          "expr": "naladb_nodes_active",
+          "legendFormat": "active {{instance}}"
+        },
+        {
+          "expr": "naladb_nodes_total",
+          "legendFormat": "total {{instance}}"
+        }
+      ]
+    },
+    {
+      "title": "Edges Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 37 },
+      "targets": [
+        {
+          "expr": "naladb_edges_active",
+          "legendFormat": "active {{instance}}"
+        },
+        {
+          "expr": "naladb_edges_total",
+          "legendFormat": "total {{instance}}"
+        }
+      ]
+    },
+    {
+      "title": "Compaction Duration",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 45 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, rate(naladb_compaction_duration_seconds_bucket[5m]))",
+          "legendFormat": "p99 {{instance}}"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(naladb_compaction_duration_seconds_bucket[5m]))",
+          "legendFormat": "p50 {{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["naladb"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "NalaDB",
+  "uid": "naladb-overview"
+}

@@ -1,0 +1,90 @@
+services:
+  naladb-0:
+    image: thatscalaguy/naladb:latest
+    container_name: naladb-0
+    command:
+      - --addr=:7301
+      - --metrics-addr=:9090
+      - --node-id=0
+      - --wal-dir=/data/wal
+    ports:
+      - "7301:7301"
+      - "9090:9090"
+    volumes:
+      - naladb-0-data:/data
+    networks:
+      - naladb-net
+    restart: unless-stopped
+
+  naladb-1:
+    image: thatscalaguy/naladb:latest
+    container_name: naladb-1
+    command:
+      - --addr=:7301
+      - --metrics-addr=:9090
+      - --node-id=1
+      - --wal-dir=/data/wal
+    ports:
+      - "7302:7301"
+      - "9091:9090"
+    volumes:
+      - naladb-1-data:/data
+    networks:
+      - naladb-net
+    restart: unless-stopped
+
+  naladb-2:
+    image: thatscalaguy/naladb:latest
+    container_name: naladb-2
+    command:
+      - --addr=:7301
+      - --metrics-addr=:9090
+      - --node-id=2
+      - --wal-dir=/data/wal
+    ports:
+      - "7303:7301"
+      - "9092:9090"
+    volumes:
+      - naladb-2-data:/data
+    networks:
+      - naladb-net
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: naladb-prometheus
+    ports:
+      - "9093:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - naladb-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: naladb-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=naladb
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboard.json:/var/lib/grafana/dashboards/naladb.json:ro
+    networks:
+      - naladb-net
+    restart: unless-stopped
+
+volumes:
+  naladb-0-data:
+  naladb-1-data:
+  naladb-2-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  naladb-net:
+    driver: bridge

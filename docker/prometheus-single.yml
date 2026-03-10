@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "naladb"
+    static_configs:
+      - targets:
+          - "naladb:9090"
+        labels:
+          cluster: "naladb-single"

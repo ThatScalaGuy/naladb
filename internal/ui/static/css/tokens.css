@@ -1,0 +1,23 @@
+:root {
+  --nala-bg: #1a1a2e;
+  --nala-surface: #232342;
+  --nala-surface-alt: #2a2a4a;
+  --nala-border: #3a3a5c;
+  --nala-text: #e0e0e8;
+  --nala-text-muted: #8888a0;
+  --nala-primary: #6c63ff;
+  --nala-primary-hover: #7b73ff;
+  --nala-accent: #00d4aa;
+  --nala-error: #ff6b6b;
+  --nala-warning: #ffd93d;
+  --nala-font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --nala-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --nala-radius-sm: 0.25em;
+  --nala-radius-md: 0.5em;
+  --nala-radius-lg: 0.75em;
+  --nala-space-xs: 0.25em;
+  --nala-space-sm: 0.5em;
+  --nala-space-md: 1em;
+  --nala-space-lg: 1.5em;
+  --nala-space-xl: 2em;
+}

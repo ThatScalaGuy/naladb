@@ -1,0 +1,77 @@
+# Single-node NalaDB with Prometheus & Grafana monitoring.
+#
+# Usage:
+#   docker compose -f docker-compose.single.yml up -d
+#
+# Endpoints:
+#   gRPC API:    localhost:7301
+#   Metrics:     localhost:9090/metrics
+#   Prometheus:  localhost:9093
+#   Grafana:     localhost:3000  (admin / naladb)
+
+services:
+  naladb:
+    image: thatscalaguy/naladb:latest
+    container_name: naladb
+    command:
+      - --addr=:7301
+      - --metrics-addr=:9090
+      - --node-id=0
+      - --wal-dir=/data/wal
+      - --segment-dir=/data/segments
+    ports:
+      - "7301:7301"
+      - "9090:9090"
+    volumes:
+      - naladb-data:/data
+    networks:
+      - naladb-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/metrics"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: naladb-prometheus
+    ports:
+      - "9093:9090"
+    volumes:
+      - ./prometheus-single.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - naladb-net
+    depends_on:
+      naladb:
+        condition: service_started
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: naladb-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=naladb
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboard.json:/var/lib/grafana/dashboards/naladb.json:ro
+    networks:
+      - naladb-net
+    depends_on:
+      prometheus:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  naladb-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  naladb-net:
+    driver: bridge

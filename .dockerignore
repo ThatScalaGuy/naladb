@@ -1,0 +1,17 @@
+.git
+.github
+_internal
+bin
+benchmarks
+docs
+examples
+scripts
+*.md
+!go.mod
+!go.sum
+.DS_Store
+.idea
+.vscode
+*.swp
+*.swo
+coverage.*

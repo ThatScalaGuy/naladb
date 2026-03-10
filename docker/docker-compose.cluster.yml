@@ -1,0 +1,134 @@
+# 3-node NalaDB RAFT cluster with Prometheus & Grafana monitoring.
+#
+# Usage:
+#   docker compose -f docker-compose.cluster.yml up -d
+#
+# Endpoints:
+#   gRPC API:    localhost:7301 (node-0), localhost:7302 (node-1), localhost:7303 (node-2)
+#   Metrics:     localhost:9090 (node-0), localhost:9091 (node-1), localhost:9092 (node-2)
+#   Prometheus:  localhost:9093
+#   Grafana:     localhost:3000  (admin / naladb)
+
+x-naladb-common: &naladb-common
+  image: thatscalaguy/naladb:latest
+  restart: unless-stopped
+  networks:
+    - naladb-net
+  healthcheck:
+    test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/metrics"]
+    interval: 10s
+    timeout: 3s
+    retries: 3
+
+services:
+  naladb-0:
+    <<: *naladb-common
+    container_name: naladb-0
+    command:
+      - --addr=:7301
+      - --metrics-addr=:9090
+      - --node-id=0
+      - --raft
+      - --raft-node-id=node-0
+      - --raft-addr=0.0.0.0:7400
+      - --raft-advertise=naladb-0:7400
+      - --raft-dir=/data/raft
+      - --raft-bootstrap
+      - --raft-peers=node-0=naladb-0:7400,node-1=naladb-1:7400,node-2=naladb-2:7400
+      - --grpc-peers=node-0=naladb-0:7301,node-1=naladb-1:7301,node-2=naladb-2:7301
+    ports:
+      - "7301:7301"
+      - "9090:9090"
+    volumes:
+      - naladb-0-data:/data
+
+  naladb-1:
+    <<: *naladb-common
+    container_name: naladb-1
+    command:
+      - --addr=:7301
+      - --metrics-addr=:9090
+      - --node-id=1
+      - --raft
+      - --raft-node-id=node-1
+      - --raft-addr=0.0.0.0:7400
+      - --raft-advertise=naladb-1:7400
+      - --raft-dir=/data/raft
+      - --raft-bootstrap
+      - --raft-peers=node-0=naladb-0:7400,node-1=naladb-1:7400,node-2=naladb-2:7400
+      - --grpc-peers=node-0=naladb-0:7301,node-1=naladb-1:7301,node-2=naladb-2:7301
+    ports:
+      - "7302:7301"
+      - "9091:9090"
+    volumes:
+      - naladb-1-data:/data
+
+  naladb-2:
+    <<: *naladb-common
+    container_name: naladb-2
+    command:
+      - --addr=:7301
+      - --metrics-addr=:9090
+      - --node-id=2
+      - --raft
+      - --raft-node-id=node-2
+      - --raft-addr=0.0.0.0:7400
+      - --raft-advertise=naladb-2:7400
+      - --raft-dir=/data/raft
+      - --raft-bootstrap
+      - --raft-peers=node-0=naladb-0:7400,node-1=naladb-1:7400,node-2=naladb-2:7400
+      - --grpc-peers=node-0=naladb-0:7301,node-1=naladb-1:7301,node-2=naladb-2:7301
+    ports:
+      - "7303:7301"
+      - "9092:9090"
+    volumes:
+      - naladb-2-data:/data
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: naladb-prometheus
+    ports:
+      - "9093:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - naladb-net
+    depends_on:
+      naladb-0:
+        condition: service_started
+      naladb-1:
+        condition: service_started
+      naladb-2:
+        condition: service_started
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: naladb-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=naladb
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboard.json:/var/lib/grafana/dashboards/naladb.json:ro
+    networks:
+      - naladb-net
+    depends_on:
+      prometheus:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  naladb-0-data:
+  naladb-1-data:
+  naladb-2-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  naladb-net:
+    driver: bridge
