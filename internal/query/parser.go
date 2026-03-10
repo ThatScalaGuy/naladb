@@ -839,12 +839,13 @@ func (p *Parser) parseEdgePattern() (*EdgePattern, error) {
 	hasLeftArrow := false
 
 	startTok := p.current()
-	if startTok.Type == TOKEN_LARROW {
+	switch startTok.Type {
+	case TOKEN_LARROW:
 		hasLeftArrow = true
 		p.advance()
-	} else if startTok.Type == TOKEN_DASH {
+	case TOKEN_DASH:
 		p.advance()
-	} else {
+	default:
 		return nil, &ParseError{
 			Message:  "expected '-' or '<-' at start of edge pattern",
 			Line:     startTok.Line,

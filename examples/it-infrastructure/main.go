@@ -19,9 +19,10 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/thatscalaguy/naladb/api/gen/naladb/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	pb "github.com/thatscalaguy/naladb/api/gen/naladb/v1"
 )
 
 // service describes a node in the infrastructure topology.

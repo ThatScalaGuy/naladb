@@ -40,11 +40,11 @@ func SystemClock() int64 {
 // Clock maintains HLC state for a single node, providing monotonically
 // increasing timestamps. It is safe for concurrent use.
 type Clock struct {
-	mu       sync.Mutex
-	nodeID   uint8
-	last     HLC
-	physNow  PhysicalClock
-	maxSkew  int64 // maximum tolerated clock skew in µs (0 = disabled)
+	mu      sync.Mutex
+	nodeID  uint8
+	last    HLC
+	physNow PhysicalClock
+	maxSkew int64 // maximum tolerated clock skew in µs (0 = disabled)
 }
 
 // NewClock creates a new HLC clock for the given node ID.

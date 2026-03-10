@@ -947,7 +947,7 @@ func (op *ShowNodesScanOp) Next() (Row, bool, error) {
 		// Collect property names.
 		propPrefix := "node:" + nm.ID + ":prop:"
 		propKeys := op.store.ScanPrefix(propPrefix)
-		var props []string
+		props := make([]string, 0, len(propKeys))
 		for _, pk := range propKeys {
 			props = append(props, pk[len(propPrefix):])
 		}

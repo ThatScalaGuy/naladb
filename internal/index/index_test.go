@@ -293,7 +293,7 @@ func TestConcurrentWritesSameKey(t *testing.T) {
 		t.Fatal("contested key should exist")
 	}
 
-	maxWall := int64((goroutines - 1) * ops + (ops - 1))
+	maxWall := int64((goroutines-1)*ops + (ops - 1))
 	if e.HLC.WallMicros() != maxWall {
 		t.Fatalf("expected wall=%d, got %d", maxWall, e.HLC.WallMicros())
 	}

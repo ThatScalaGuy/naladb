@@ -102,7 +102,7 @@ func TestDownsampleAvg_HourlyAggregation(t *testing.T) {
 func TestDownsampleAvg_PerSecondToPerHour(t *testing.T) {
 	// 24 hours of per-second data → 24 hourly buckets.
 	hour := int64(3_600_000_000) // 1 hour in µs
-	var points []DataPoint
+	points := make([]DataPoint, 0, 1440)
 	for h := range 24 {
 		for s := range 60 {
 			points = append(points, DataPoint{
